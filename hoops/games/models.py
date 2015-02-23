@@ -68,7 +68,6 @@ class Game(models.Model):
     three_point_pct = models.FloatField(null=True, blank=True)
     ppws = models.FloatField(null=True, blank=True)
     turnover_ratio = models.FloatField(null=True, blank=True)
-    field_goal_pct = models.FloatField(null=True, blank=True)
     to_r = models.FloatField(null=True, blank=True) # not sure what this is
     blocks = models.IntegerField(null=True, blank=True)
     fouls = models.IntegerField(null=True, blank=True)
@@ -80,4 +79,6 @@ class Game(models.Model):
     offensive_points_per_posession = models.FloatField(null=True, blank=True)
     defensive_points_per_posession = models.FloatField(null=True, blank=True) # not sure what this is
 
-
+    def get_defensive_rebounds(self):
+        return self.total_rebounds - self.offensive_rebounds
+    defensive_rebounds = property(get_defensive_rebounds)

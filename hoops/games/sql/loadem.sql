@@ -699,7 +699,6 @@ join games_team ot on os.abbrev = ot.school_id
 join games_team t on r.abbrev = t.school_id
                  and s.year = t.season_id;
 
-                 
 
 
 
