@@ -9,26 +9,28 @@
     <input type="submit">
   </form>
 
-  <h1>Predictions</h1>
-  <table border="1">
-    <thead>
-      <th>Model</th>
-      <th>{{team1.school.name}}</th>
-      <th>{{team2.school.name}}</th>
-      <th>Spread</th>
-      <th>Total</th>
-    </thead>
-    <tbody>
-      {% for model in models %}
-        <tr>
-          <td>{{model.name}}</td>
-          <td>{{model.team1_score}}</td>
-          <td>{{model.team2_score}}</td>
-          <td>{{model.spread}}</td>
-          <td>{{model.total}}</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  {% if models %}
+    <h1>Predictions</h1>
+    <table border="1">
+      <thead>
+        <th>Model</th>
+        <th>{{team1.school.name}}</th>
+        <th>{{team2.school.name}}</th>
+        <th>Spread</th>
+        <th>Total</th>
+      </thead>
+      <tbody>
+        {% for model in models %}
+          <tr>
+            <td>{{model.name}}</td>
+            <td>{{model.team1_score}}</td>
+            <td>{{model.team2_score}}</td>
+            <td>{{model.spread}}</td>
+            <td>{{model.total}}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
 
 {% endblock content %}

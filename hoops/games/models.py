@@ -6,6 +6,7 @@ class School(models.Model):
     abbrev = models.CharField(max_length=5, primary_key=True)
     name = models.CharField(max_length=100)
     division = models.CharField(max_length=5, null=True, blank=True)
+    mascot = models.CharField(max_length=100, null=True, blank=True)
 
     def __unicode__(self):
         return self.name
