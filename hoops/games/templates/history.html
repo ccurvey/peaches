@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}History{% endblock title %}
+
+{% block content %}
+  <form method="POST">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit">
+  </form>
+
+  <div class="row">
+    <!-- TODO:  don't use bootstrap classes, write your own -->
+    <table border="1">
+      <thead>
+        <td colspan="4">{{team1.school.name}}</td>
+        <td>&nbsp;</td>
+        <td colspan="4">{{team2.school.name}}</td>
+      </thead>
+      <thead>
+        <th>Opponent</th>
+        <th>PF</th>
+        <th>PA</th>
+        <th>SU</th>
+
+        <th>Date</th>
+
+        <th>Opponent</th>
+        <th>PF</th>
+        <th>PA</th>
+        <th>SU</th>
+      </thead>
+
+      <tbody>
+        {% for game_date, games in comparison_grid %}
+          <tr {% if games.0.opponent in common_opponents or games.1.opponent in common_opponents %}style="font-weight:bold;"{% endif %} {% ifequal games.0.opponent team2 %}style="font-style:italic;"{% endifequal %}>
+            <td>
+              {% ifequal games.0.location "A" %}
+                @
+              {% endifequal %}
+              {{games.0.opponent.school.name}}
+            </td>
+            <td>{{games.0.points_for}}</td>
+            <td>{{games.0.points_against}}</td>
+            <td>{{games.0.result}}</td>
+
+            <td bgcolor="lightgrey">{{game_date|date:"M d"}}</td>
+
+            <td>
+             {% ifequal games.1.location "A" %}
+                @
+              {% endifequal %}
+              {{games.1.opponent.school.name}}</td>
+            <td>{{games.1.points_for}}</td>
+            <td>{{games.1.points_against}}</td>
+            <td>{{games.1.result}}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock content %}
