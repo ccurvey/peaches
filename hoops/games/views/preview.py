@@ -55,8 +55,6 @@ class PointsPerPosession(PredictionModel):
     averages but that the number of posessions will be the average of the
     number of posessions in the last game for each team"""
     def get_team1_score(self):
-        import wingdbstub
-
         team1_prior_game = self.team1.get_prior_game(self.game_date)
         team1_posessions = team1_prior_game.posessions
         team1_ppp = team1_prior_game.offensive_points_per_posession
@@ -98,11 +96,8 @@ def preview(request):
                 school=form.cleaned_data['school2'], season=season)
             game_date = form.cleaned_data['game_date']
 
-            import wingdbstub
             rtm = ReturnToMean(team1, team2, game_date)
             ppp = PointsPerPosession(team1, team2, game_date)
-
-            import wingdbstub
 
             return render(request, "preview.html",
                           {"form" : form,  "team1" : team1, "team2" : team2,
