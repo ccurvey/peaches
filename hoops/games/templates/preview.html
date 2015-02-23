@@ -1,4 +1,18 @@
 {% extends "base.html" %}
+{% load staticfiles %}
+
+{% block css %}
+  <link rel="stylesheet" href="{% static "css/datepicker.css" %}">
+{% endblock css %}
+
+{% block scripts %}
+  <script src="{% static "js/bootstrap-datepicker.js" %}"></script>
+  <script>
+   $(document).ready(function(){
+     $(".datepicker").datepicker();
+   });
+  </script>
+{% endblock scripts %}
 
 {% block title %}Game Preview{% endblock title %}
 

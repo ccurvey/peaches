@@ -4,10 +4,13 @@ from django import forms
 from games.models import Team, School, Season
 
 class MatchupForm(forms.Form):
-    game_date = forms.DateField()
+    game_date = forms.DateField(widget=forms.widgets.DateInput(
+        attrs={"class" : "datepicker"}))
     school1 = forms.ModelChoiceField(queryset=School.objects.order_by("abbrev"))
     school2 = forms.ModelChoiceField(queryset=School.objects.order_by("abbrev"))
 
+# TODO:  move the prediction models out to their own app so that we can do
+# more stuff with them.
 class PredictionModel(object):
     def __init__(self, team1, team2, game_date):
         self.team1 = team1
