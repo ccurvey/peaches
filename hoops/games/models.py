@@ -34,6 +34,16 @@ class Team(models.Model):
     def __unicode__(self):
         return u"%s-%s" % (self.school.abbrev, self.season.year)
 
+    def get_ordered_games(self):
+        return self.game_set.order_by("-game_date")
+    ordered_games = property(get_ordered_games)
+
+    def get_prior_game(self, game_date):
+        try:
+            return self.ordered_games.filter(game_date__lt=game_date)[0]
+        except IndexError:
+            return None
+
 class Game(models.Model):
     """a match between two teams.  Note that a single game in the real
     world will have two records in this table -- one for home/away, and

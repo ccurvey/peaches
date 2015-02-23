@@ -697,7 +697,9 @@ join games_school os on r.opponent_name = os.name
 join games_team ot on os.abbrev = ot.school_id
                   and s.year = ot.season_id
 join games_team t on r.abbrev = t.school_id
-                 and s.year = t.season_id
+                 and s.year = t.season_id;
+
+                 
 
 
 

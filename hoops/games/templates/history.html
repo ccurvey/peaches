@@ -47,9 +47,14 @@
             <td bgcolor="lightgrey">{{game_date|date:"M d"}}</td>
 
             <td>
-             {% ifequal games.1.location "A" %}
+              {% ifequal games.1.location "A" %}
                 @
               {% endifequal %}
+
+              {% ifequal games.1.location "N" %}
+                (N)
+              {% endifequal %}
+
               {{games.1.opponent.school.name}}</td>
             <td>{{games.1.points_for}}</td>
             <td>{{games.1.points_against}}</td>

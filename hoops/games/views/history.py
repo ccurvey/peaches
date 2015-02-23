@@ -1,23 +1,12 @@
-from collections import OrderedDict
-
 from django.shortcuts import render
 from django import forms
-from django.db import models
 
-from games.models import Season, School, Team
+from games.models import Team, Season, School
 
-class HistoryForm(forms.Form):
+class MatchupForm(forms.Form):
     season = forms.ModelChoiceField(queryset=Season.objects.order_by("-year"))
     school1 = forms.ModelChoiceField(queryset=School.objects.order_by("abbrev"))
     school2 = forms.ModelChoiceField(queryset=School.objects.order_by("abbrev"))
-
-class TeamWrapper(Team):
-    class Meta:
-        proxy = True
-
-    def get_ordered_games(self):
-        return self.game_set.order_by("-game_date")
-    ordered_games = property(get_ordered_games)
 
 class ComparisonGrid(object):
     def __init__(self, team1, team2):
@@ -49,14 +38,13 @@ class ComparisonGrid(object):
             raise StopIteration()
 
 def history(request):
-    if request.method == 'POST':
-        form = HistoryForm(request.POST)
+    if request.REQUEST.has_key("school1"):
+        form = MatchupForm(request.POST)
         if form.is_valid():
-            import wingdbstub
-            team1 = TeamWrapper.objects.get(
+            team1 = Team.objects.get(
                 school=form.cleaned_data['school1'],
                 season=form.cleaned_data['season'])
-            team2 = TeamWrapper.objects.get(
+            team2 = Team.objects.get(
                 school=form.cleaned_data['school2'],
                 season=form.cleaned_data['season'])
 
@@ -78,8 +66,7 @@ def history(request):
                           {"form" : form,  "team1" : team1, "team2" : team2,
                            "comparison_grid" : comparison_grid,
                            "common_opponents" : common_opponents})
-        pass
     else:
-        form = HistoryForm()
+        form = MatchupForm()
 
     return render(request, 'history.html', {"form" : form})

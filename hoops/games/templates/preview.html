@@ -3,5 +3,30 @@
 {% block title %}Game Preview{% endblock title %}
 
 {% block content %}
-  <h1>Preview Page Will Go Here</h1>
+  <form method="POST">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit">
+  </form>
+
+  <table border="1">
+    <thead>
+      <th>Model</th>
+      <th>{{team1.school.name}}</th>
+      <th>{{team2.school.name}}</th>
+      <th>Spread</th>
+      <th>Total</th>
+    </thead>
+    <tbody>
+      {% for model in models %}
+        <tr>
+          <td>{{model.name}}</td>
+          <td>{{model.team1_score}}</td>
+          <td>{{model.team2_score}}</td>
+          <td>{{model.spread}}</td>
+          <td>{{model.total}}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 {% endblock content %}
