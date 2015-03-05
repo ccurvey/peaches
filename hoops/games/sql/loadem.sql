@@ -570,9 +570,17 @@ where abbrev = 'CLST'
 and team_name = 'Cleveland';
 
 update raw_data
+set opponent_name = 'Cleveland State'
+where opponent_name = 'Cleveland';
+
+update raw_data
 set team_name = 'Florida International'
 where abbrev = 'FAU'
 and team_name = 'Florida Atlantic';
+
+update raw_data
+set opponent_name = 'Florida International'
+where opponent_name = 'Florida Atlantic';
 
 update raw_data
 set team_name = 'La Salle'
@@ -580,9 +588,17 @@ where abbrev = 'LAS'
 and team_name = 'LaSalle';
 
 update raw_data
+set opponent_name = 'La Salle'
+where opponent_name = 'LaSalle';
+
+update raw_data
 set team_name = 'Middle Tennessee State'
 where abbrev = 'MTSU'
 and team_name = 'Middle Tennessee';
+
+update raw_data
+set opponent_name = 'Middle Tennessee State'
+where opponent_name = 'Middle Tennessee';
 
 update raw_data
 set team_name = 'San Diego State'
@@ -595,6 +611,10 @@ where abbrev = 'SJU'
 and team_name = 'St. Joseph''s';
 
 update raw_data
+set opponent_name = 'Saint Joseph''s'
+where opponent_name = 'St. Joseph''s';
+
+update raw_data
 set team_name = 'Saint Mary''s'
 where abbrev = 'SMC'
 and team_name = 'San Diego State';
@@ -603,6 +623,10 @@ update raw_data
 set team_name = 'Saint John''s (NY)'
 where abbrev = 'STJ'
 and team_name = 'Saint John''s';
+
+update raw_data
+set opponent_name = 'Saint John''s (NY)'
+where opponent_name = 'Saint John''s';
 
 commit;
 
@@ -644,6 +668,8 @@ from games_school
 /****************************************************************************************
 ** create our game records.  This takes a few minutes (but only a few)
 *****************************************************************************************/
+truncate table games_game;
+
 insert into games_game
 ( assists
 , blocks
@@ -698,7 +724,5 @@ join games_team ot on os.abbrev = ot.school_id
                   and s.year = ot.season_id
 join games_team t on r.abbrev = t.school_id
                  and s.year = t.season_id;
-
-
 
 

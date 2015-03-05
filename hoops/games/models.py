@@ -4,12 +4,16 @@ from django.db import models
 class School(models.Model):
     """a college or university that fields a basketball team"""
     abbrev = models.CharField(max_length=5, primary_key=True)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, db_index=True)
     division = models.CharField(max_length=5, null=True, blank=True)
     mascot = models.CharField(max_length=100, null=True, blank=True)
 
     def __unicode__(self):
         return self.name
+
+class SchoolAlias(models.Model):
+    alias = models.CharField(max_length=100)
+    school = models.ForeignKey(School)
 
 class Season(models.Model):
     """a basketball season.  Note that since seasons run from November
