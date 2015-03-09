@@ -10,7 +10,16 @@ class School(models.Model):
 
     def __unicode__(self):
         return self.name
-
+    
+    def save(self, *args, **kwargs):
+        """when saving a school, make sure we have the alias set up for it"""
+        super(School, self).save(*args, **kwargs)
+        
+        alias, created = SchoolAlias.objects.get_or_create(alias=self.name, 
+                                                 defaults={"school" : self})
+        if not created:
+            assert alias.school == self
+            
 class SchoolAlias(models.Model):
     alias = models.CharField(max_length=100)
     school = models.ForeignKey(School)

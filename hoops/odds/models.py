@@ -72,7 +72,7 @@ class BettingLine(models.Model):
 class Proposition(models.Model):
     game = models.ForeignKey(Game)
     class_name = models.CharField(max_length=100)
-    value = models.FloatField()
+    value = models.FloatField(null=True, blank=True)
     payoff = models.IntegerField(default=-110)
 
     def save(self, *args, **kwargs):
@@ -80,7 +80,7 @@ class Proposition(models.Model):
             self.class_name == self.__class__.__name__
         super(Proposition,self).save(*args, **kwargs)
 
-    def pay_win(self, wager_amount):
+    def pay(self, wager_amount):
         if self.payoff > 0:
             return wager_amount + (wager_amount * (float(self.payoff) / 100))
 

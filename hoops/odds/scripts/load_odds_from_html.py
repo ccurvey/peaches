@@ -2,16 +2,15 @@ import os.path
 from datetime import date
 
 from bs4 import BeautifulSoup
-from fuzzywuzzy import process
 
 import django
 django.setup()
 
 from games.models import School, Game, Team, Season, SchoolAlias
-from odds.models import BettingLine
+from odds.models import GameMoney, GameSide, GameTotal
 
 ALL_SCHOOLS = [s.name for s in School.objects.all()]
-MISSING_SCHOOLS = set()
+missing_schools = set()
 
 """
 This is what the data looks like for a game in April 2008
@@ -81,19 +80,25 @@ class Line(object):
 
         self.roto = cells[1].get_text()
         self.location = cells[2].get_text().strip()
-        self.name = cells[3].get_text().strip()
+        self.school_name = cells[3].get_text().strip()
+        self.school_name = "".join([i for i in self.school_name if 31 < ord(i) < 127])
         self.first_half_score = cells[4].get_text()
         self.second_half_score = cells[5].get_text()
         self.final_score = cells[6].get_text().strip()
         open_prop = cells[7].get_text() # could be spread or total
-        self.close_prop = cells[8].get_text() # could be spread or total
-        if self.close_prop == 'pk':
-            self.close_prop = 0
-        elif self.close_prop == "NL":
-            self.close_prop = None
+        self.close = cells[8].get_text() # could be spread or total
+        if self.close == 'pk':
+            self.close = 0
+        elif self.close == "NL":
+            self.close = None
         else:
-            self.close_prop = float(self.close_prop)
-        homemoney_line = cells[9].get_text()
+            self.close = float(self.close)
+            
+        money_line = cells[9].get_text()
+        if money_line == 'NL':
+            self.money_line = None
+        else:
+            self.money_line = money_line
 
         self.second_half_prop = cells[10].get_text()
         if self.second_half_prop == 'pk':
@@ -111,7 +116,7 @@ class Line(object):
                 alias = SchoolAlias.objects.get(alias=self.name)
                 return alias.school
             except SchoolAlias.DoesNotExist:
-                MISSING_SCHOOLS.add(self.name)
+                missing_schools.add(self.name)
                 (best_name, match_score) = process.extractOne(self.name, ALL_SCHOOLS)
                 if best_name:
                     try:
@@ -127,68 +132,176 @@ class Line(object):
 
         return Team.objects.get(school=self.school, season=season)
     team = property(get_team)
-
+    
+############################################################################
 class PropGenerator(object):
-    """starts with two lines and generates all possible propositions
-       * home spread (game)
-       * home spread (2nd half)
-       * away spread (game)
-       * away spread (2nd half)
-       * total (game)
-       * total (2nd half)
-    """
-    def __init__(self, visitor_line, home_line):
-        self.visitor_line = visitor_line
-        self.home_line = home_line
+    def __init__(self, year):
+        self.line_pair = []
+        self.year = year
+        self._by_school = dict()
+    
+    def add_line(self, line):
+        self.line_pair.append(line)
+        #if len(self.line_pair) == 2:
+            #dog_line = BettingLine(self.dog_spread, self.dog_money_line, 
+                                   #self.total)
+            #self._by_school[self.dog_school] = dog_line
+            
+            #favorite_line = BettingLine(self.favorite_spread, 
+                                        #self.favorite_money_line, 
+                                        #self.total)
+            #self._by_school[self.favorite_school] = favorite_line
+            #self._by_school[self.dog_school] = dog_line
+        
+    def get_favorite_line(self):
+        if self.line_pair[0].close < self.line_pair[1].close:
+            return self.line_pair[0]
+        elif self.line_pair[0].close == self.line_pair[1].close:
+            return self.line_pair[0]
+        return self.line_pair[1]
+    favorite_line = property(get_favorite_line)
 
+    def get_favorite_school(self):
+        return self.favorite_line.school_name
+    favorite_school = property(get_favorite_school)
+    
+    def get_favorite_spread(self):
+        try:
+            return self.favorite_line.close * -1
+        except TypeError:
+            return None
+    favorite_spread = property(get_favorite_spread)
+
+    def get_favorite_money_line(self):
+        return self.favorite_line.money_line
+    favorite_money_line = property(get_favorite_money_line)
+    
+    def get_dog_line(self):
+        if self.line_pair[0].close > self.line_pair[1].close:
+            return self.line_pair[0]
+        return self.line_pair[1]
+    dog_line = property(get_dog_line)
+    
+    def get_dog_school(self):
+        return self.dog_line.school_name
+    dog_school = property(get_dog_school)
+    
+    def get_dog_spread(self):
+        try:
+            return self.favorite_spread * -1
+        except TypeError:
+            return None
+    dog_spread = property(get_dog_spread)
+    
+    def get_dog_money_line(self):
+        return self.dog_line.money_line
+    dog_money_line = property(get_dog_money_line)
+    
+    def get_total(self):
+        return self.dog_line.close
+    total = property(get_total)
+    
+    def get_game_date(self):
+        return self.line_pair[0].game_date
+    game_date = property(get_game_date)
+    
+    def get_school_line(self, school_name):
+        return self._by_school[school_name]
+    
+############################################################################
+from odds.models import GameMoney, GameSide, GameTotal
 def process_file(filename):
-    import wingdbstub
     soup = BeautifulSoup(open(filename, "r"))
 
     (f, ext) = os.path.splitext(filename)
     year = int(f[-4:])
+    pg = PropGenerator(year)
+
+    print filename
     for i, game in enumerate(soup.find_all("tr", {"height":12})):
         if i == 0:
             continue
 
         cells = game.find_all("td")
-
+        
         if i % 2 == 0:
-            # second line of couplet
-            home_line = Line(cells, year)
+            pg.add_line(Line(cells, year))
 
-            ###########################################################
-            ## now we have the home and visitor information, so we
-            ## can find the game records and update them
-            ###########################################################
-            visitor = visitor_line.team
-            home = home_line.team
-
+            # now we have to find the school/team/game
             try:
-                visitor_game = Game.objects.get(team=visitor, opponent=home,
-                    game_date = visitor_line.game_date)
-            except Game.DoesNotExist:
-                print "could not find %s at %s on %s" % (visitor_line.name,
-                                      home_line.name, visitor_line.game_date)
-
-                """
+                fav_school = SchoolAlias.objects.get(alias=pg.favorite_school).school
+            except SchoolAlias.DoesNotExist:
+                print "could not find %s" % pg.favorite_school
+                missing_schools.add(pg.favorite_school)
+                fav_school = None
+                
+            try:
+                dog_school = SchoolAlias.objects.get(alias=pg.dog_school).school
+            except SchoolAlias.DoesNotExist:
+                print "could not find %s" % pg.dog_school
+                missing_schools.add(pg.dog_school)
+                dog_school = None
+        
+            try:
+                season = Season.objects.get(start_date__lte=pg.game_date,
+                                            end_date__gte=pg.game_date)
+            except Season.DoesNotExist:
+                print "could not find season for date %s" % pg.game_date
+                season = None
+                    
+            if all((season, fav_school, dog_school)):
+                fav_team = Team.objects.get(school=fav_school, season=season)
+                dog_team = Team.objects.get(school=dog_school, season=season)
+                
                 try:
-                    visitor_name = School.objects.get(name=visitor_line.name)
-                except School.DoesNotExist:
-                    print "No School %s" % visitor_line.name
-
-                try:
-                    home_name = School.objects.get(name=home_line.name)
-                except School.DoesNotExist:
-                    print "No School %s" % home_line.name
-                """
+                    fav_game = Game.objects.get(game_date=pg.game_date, 
+                                            team=fav_team, opponent=dog_team)
+                except Game.DoesNotExist:
+                    print "could not find game for %s vs %s on %s" % (
+                        fav_team.school.name, dog_team.school.name, 
+                        pg.game_date)
+                else:
+                    if pg.favorite_spread is not None:
+                        GameSide.objects.get_or_create(game=fav_game, 
+                                                       class_name="GameSide",
+                                                       defaults={"value" : pg.favorite_spread})
+                    if pg.favorite_money_line is not None:
+                        GameMoney.objects.get_or_create(game=fav_game, 
+                                                        class_name="GameMoney",
+                                                        defaults={"payoff" : pg.favorite_money_line})
+                    if pg.total is not None:
+                        GameTotal.objects.get_or_create(game=fav_game,
+                                                        class_name="GameTotal",
+                                                        defaults={"value" : pg.total})
+                    
+                try:    
+                    dog_game = Game.objects.get(game_date=pg.game_date, 
+                                            team=dog_team, opponent=fav_team)
+                except Game.DoesNotExist:
+                    print "could not find game for %s vs %s on %s" % (
+                        dog_team.school.name, fav_team.school.name, 
+                        pg.game_date)
+                else:
+                    if pg.dog_spread is not None:
+                        GameSide.objects.get_or_create(game=dog_game, 
+                                                       class_name="GameSide",
+                                                       defaults={"value" : pg.dog_spread})
+                    if pg.dog_money_line is not None:
+                        GameMoney.objects.get_or_create(game=dog_game, 
+                                                        class_name="GameMoney",
+                                                        defaults={"payoff" : pg.dog_money_line})
+                    if pg.total is not None:
+                        GameTotal.objects.get_or_create(game=dog_game,
+                                                        class_name="GameTotal",
+                                                        defaults={"value" : pg.total})
+                                
+            pg = PropGenerator(year)
         else:
-            visitor_line = Line(cells, year)
-
+            pg.add_line(Line(cells, year))
+ 
 def run():
     import glob
     for filename in glob.glob("/home/chris/Dropbox/odds/ncaabasketballoddsarchives_*.htm",
                      ):
         process_file(filename)
-    print MISSING_SCHOOLS
-
+    print missing_schools
