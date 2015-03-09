@@ -2,6 +2,14 @@
 
 {% block title %}History{% endblock title %}
 
+{% block stylesheets %}
+  <style>
+    .prop-value {
+      text-align : right;
+    }
+  </style>
+{% endblock stylesheets %}
+
 {% block content %}
   <form method="POST">
     {% csrf_token %}
@@ -14,15 +22,19 @@
       <!-- TODO:  don't use bootstrap classes, write your own -->
       <table border="1">
         <thead>
-          <td colspan="4">{{team1.school.name}}</td>
+          <td colspan="8">{{team1.school.name}}</td>
           <td>&nbsp;</td>
-          <td colspan="4">{{team2.school.name}}</td>
+          <td colspan="8">{{team2.school.name}}</td>
         </thead>
         <thead>
           <th>Opponent</th>
           <th>PF</th>
           <th>PA</th>
           <th>SU</th>
+          <th>Spread</th>
+          <th>SR</th>
+          <th>Total</th>
+          <th>TR</th>
 
           <th>Date</th>
 
@@ -30,6 +42,10 @@
           <th>PF</th>
           <th>PA</th>
           <th>SU</th>
+          <th>Spread</th>
+          <th>SR</th>
+          <th>Total</th>
+          <th>TR</th>
         </thead>
 
         <tbody>
@@ -44,6 +60,10 @@
               <td>{{games.0.points_for}}</td>
               <td>{{games.0.points_against}}</td>
               <td>{{games.0.result}}</td>
+              <td class="prop-value">{{games.0.side_proposition.value}}</td>
+              <td class="result">{{games.0.side_proposition.result_text}}</td>
+              <td class="prop-value">{{games.0.total_proposition.value}}</td>
+              <td class="result">{{games.0.total_proposition.result_text}}</td>
 
               <td bgcolor="lightgrey">{{game_date|date:"M d"}}</td>
 
@@ -60,6 +80,10 @@
               <td>{{games.1.points_for}}</td>
               <td>{{games.1.points_against}}</td>
               <td>{{games.1.result}}</td>
+              <td class="prop-value">{{games.1.side_proposition.value}}</td>
+              <td class="result">{{games.1.total_proposition.value}}</td>
+              <td class="prop-value">{{games.1.total_proposition.value}}</td>
+              <td class="result">{{games.1.total_proposition.result_text}}</td>
             </tr>
           {% endfor %}
         </tbody>

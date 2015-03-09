@@ -75,6 +75,12 @@ class Proposition(models.Model):
     value = models.FloatField(null=True, blank=True)
     payoff = models.IntegerField(default=-110)
 
+    TEXT_MAP = {
+        1 : "W",
+        0 : "P",
+        -1 : "L"
+    }
+
     def save(self, *args, **kwargs):
         if not self.class_name:
             self.class_name == self.__class__.__name__
@@ -89,6 +95,13 @@ class Proposition(models.Model):
 
         # if it was even money, then return double the wager
         return 2 * wager_amount
+
+    def get_result_text(self):
+        try:
+            return self.TEXT_MAP[self.result]
+        except KeyError:
+            return None
+    result_text = property(get_result_text)
 
 class GameMoney(Proposition):
     """straight up"""
@@ -116,12 +129,27 @@ class GameSide(Proposition):
     class  Meta:
         proxy = True
 
+    def get_result(self):
+        import wingdbstub
+
+        if self.game.points_for is None or self.game.points_against is None:
+            return None
+
+        if self.game.points_for + self.value < self.game.points_against:
+            return -1
+
+        if self.game.points_for + self.value < self.game.points_against:
+            return 0
+
+        return 1
+    result = property(get_result)
+
     def pay(self, wager_amount):
         # if we don't have a score, don't return a multiplier
         if self.game.points_for is None or self.game.points_against is None:
             return None
 
-        # if "team" lost, then they lose on the money line
+        # if "team" lost, then they lose
         if self.game.points_for + self.value < self.game.points_against:
             return 0
 
@@ -134,6 +162,20 @@ class GameSide(Proposition):
 class GameTotal(Proposition):
     class Meta:
         proxy = True
+
+    TEXT_MAP = { -1 : 'U',
+                 0 : 'P',
+                 1 : 'O'}
+
+    def get_result(self):
+        if self.game.points_for is None or self.game.points_against is None:
+            return None
+        if self.game.points_for + self.game.points_against < self.value:
+            return -1
+        if self.game.points_for + self.game.points_against == self.value:
+            return 0
+        return 1
+    result = property(get_result)
 
     def pay(self, wager_amount):
         if self.game.points_for is None or self.game.points_against is None:

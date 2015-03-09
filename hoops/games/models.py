@@ -10,16 +10,16 @@ class School(models.Model):
 
     def __unicode__(self):
         return self.name
-    
+
     def save(self, *args, **kwargs):
         """when saving a school, make sure we have the alias set up for it"""
         super(School, self).save(*args, **kwargs)
-        
-        alias, created = SchoolAlias.objects.get_or_create(alias=self.name, 
+
+        alias, created = SchoolAlias.objects.get_or_create(alias=self.name,
                                                  defaults={"school" : self})
         if not created:
             assert alias.school == self
-            
+
 class SchoolAlias(models.Model):
     alias = models.CharField(max_length=100)
     school = models.ForeignKey(School)
@@ -92,6 +92,29 @@ class Game(models.Model):
     posessions = models.IntegerField(null=True, blank=True)
     offensive_points_per_posession = models.FloatField(null=True, blank=True)
     defensive_points_per_posession = models.FloatField(null=True, blank=True) # not sure what this is
+
+    def get_side_proposition(self):
+        from odds.models import GameSide
+        try:
+            return GameSide.objects.get(game=self, class_name="GameSide")
+        except GameSide.DoesNotExist:
+            return None
+    side_proposition = property(get_side_proposition)
+
+    def get_total_proposition(self):
+        from odds.models import GameTotal
+        try:
+            return GameTotal.objects.get(game=self, class_name="GameTotal")
+        except GameTotal.DoesNotExist:
+            return None
+    total_proposition = property(get_total_proposition)
+
+    def get_money_proposition(self):
+        from odds.models import GameMoney
+        try:
+            return GameMoney.objects.get(game=self, class_name="GameMoney")
+        except GameMoney.DoesNotExist:
+            return None
 
     def get_defensive_rebounds(self):
         return self.total_rebounds - self.offensive_rebounds

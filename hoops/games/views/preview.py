@@ -8,6 +8,8 @@ class MatchupForm(forms.Form):
         attrs={"class" : "datepicker"}))
     school1 = forms.ModelChoiceField(queryset=School.objects.order_by("abbrev"))
     school2 = forms.ModelChoiceField(queryset=School.objects.order_by("abbrev"))
+    spread = forms.FloatField()
+    total = forms.FloatField()
 
 # TODO:  move the prediction models out to their own app so that we can do
 # more stuff with them.
@@ -80,6 +82,71 @@ class PointsPerPosession(PredictionModel):
         return team2_ppp * expected_posessions
     team2_score = property(get_team2_score)
 
+"""This works if you have an existing line.  If you don't, use the one below"""
+class MarketPrediction(PredictionModel):
+    def get_team1_score(self):
+        import wingdbstub
+
+        from games.models import Game
+        try:
+            game = Game.objects.get(team=self.team1, opponent=self.team2,
+                                    game_date=self.game_date)
+        except Game.DoesNotExist:
+            return None
+
+        # see if there is actually a line for this game
+        from odds.models import GameSide, GameTotal
+        try:
+            side = GameSide.objects.get(game=game, class_name="GameSide")
+        except GameSide.DoesNotExist:
+            return None
+
+        try:
+            total = GameTotal.objects.get(game=game, class_name="GameTotal")
+        except GameTotal.DoesNotExist:
+            return None
+
+        return (total.value / 2) - (side.value / 2)
+    team1_score = property(get_team1_score)
+
+    def get_team2_score(self):
+        from games.models import Game
+        try:
+            game = Game.objects.get(team=self.team2, opponent=self.team1,
+                                    game_date=self.game_date)
+        except Game.DoesNotExist:
+            return None
+
+        # see if there is actually a line for this game
+        from odds.models import GameSide, GameTotal
+        try:
+            side = GameSide.objects.get(game=game, class_name="GameSide")
+        except GameSide.DoesNotExist:
+            side = None
+
+        try:
+            total = GameTotal.objects.get(game=game, class_name="GameTotal")
+        except GameTotal.DoesNotExist:
+            total = None
+
+        if side and total:
+            return (total.value / 2) - (side.value / 2)
+    team2_score = property(get_team2_score)
+
+class MarketPrediction(PredictionModel):
+    def __init__(self, team1, team2, game_date, spread, total):
+        super(MarketPrediction, self).__init__(team1, team2, game_date)
+        self._spread = spread
+        self._total = total
+
+    def get_team1_score(self):
+        return (self._total / 2) - (self._spread / 2)
+    team1_score = property(get_team1_score)
+
+    def get_team2_score(self):
+        return (self._total / 2) + (self._spread / 2)
+    team2_score = property(get_team2_score)
+
 # Create your views here.
 def preview(request):
     if request.REQUEST.has_key("school1"):
@@ -96,12 +163,15 @@ def preview(request):
                 school=form.cleaned_data['school2'], season=season)
             game_date = form.cleaned_data['game_date']
 
+            market = MarketPrediction(team1, team2, game_date,
+                                      form.cleaned_data['spread'],
+                                      form.cleaned_data['total'])
             rtm = ReturnToMean(team1, team2, game_date)
             ppp = PointsPerPosession(team1, team2, game_date)
 
             return render(request, "preview.html",
                           {"form" : form,  "team1" : team1, "team2" : team2,
-                           "models" : (rtm, ppp)})
+                           "models" : (market, rtm, ppp)})
     else:
         form = MatchupForm()
 
