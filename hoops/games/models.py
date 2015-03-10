@@ -58,6 +58,13 @@ class Team(models.Model):
         except IndexError:
             return None
 
+    def get_prior_away_game(self, game_date):
+        try:
+            return self.ordered_games.filter(game_date__lt=game_date,
+                                             location__in=("A","N"))[0]
+        except IndexError:
+            return None
+
 class Game(models.Model):
     """a match between two teams.  Note that a single game in the real
     world will have two records in this table -- one for home/away, and

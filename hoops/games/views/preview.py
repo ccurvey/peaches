@@ -52,6 +52,22 @@ class ReturnToMean(PredictionModel):
         return (team2_for + team1_against) / 2
     team2_score = property(get_team2_score)
 
+class ReturnToMeanNeutral(PredictionModel):
+    def get_team1_score(self):
+        team1_for = self.team1.get_prior_away_game(self.game_date).points_for
+        team2_against = self.team2.get_prior_away_game(self.game_date).points_against
+
+        return (team1_for + team2_against) / 2
+    team1_score = property(get_team1_score)
+
+    def get_team2_score(self):
+        team1_against = self.team1.get_prior_away_game(self.game_date).points_against
+        team2_for = self.team2.get_prior_away_game(self.game_date).points_for
+
+        return (team2_for + team1_against) / 2
+    team2_score = property(get_team2_score)
+
+
 class PointsPerPosession(PredictionModel):
     """Assumes that both teams will keep the same points-per-posession
     averages but that the number of posessions will be the average of the
@@ -85,8 +101,6 @@ class PointsPerPosession(PredictionModel):
 """This works if you have an existing line.  If you don't, use the one below"""
 class MarketPrediction(PredictionModel):
     def get_team1_score(self):
-        import wingdbstub
-
         from games.models import Game
         try:
             game = Game.objects.get(team=self.team1, opponent=self.team2,
@@ -167,11 +181,12 @@ def preview(request):
                                       form.cleaned_data['spread'],
                                       form.cleaned_data['total'])
             rtm = ReturnToMean(team1, team2, game_date)
+            rtm_n = ReturnToMeanNeutral(team1, team2, game_date)
             ppp = PointsPerPosession(team1, team2, game_date)
 
             return render(request, "preview.html",
                           {"form" : form,  "team1" : team1, "team2" : team2,
-                           "models" : (market, rtm, ppp)})
+                           "models" : (market, rtm, rtm_n, ppp)})
     else:
         form = MatchupForm()
 

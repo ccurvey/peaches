@@ -130,8 +130,6 @@ class GameSide(Proposition):
         proxy = True
 
     def get_result(self):
-        import wingdbstub
-
         if self.game.points_for is None or self.game.points_against is None:
             return None
 
