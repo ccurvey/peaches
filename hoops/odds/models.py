@@ -1,65 +1,7 @@
 from django.db import models
 
 from games.models import Game
-
-class PredictionModel(models.Model):
-    name = models.CharField(max_length=100)
-
-    def get_name(self):
-        try:
-            return self.MODEL_NAME
-        except AttributeError:
-            return self.__class__.__name__
-    name = property(get_name)
-
-    def get_spread(self, team1, team2, game_date):
-        team1_score = self.get_team_score(team1, team2, game_date)
-        team2_score = self.get_team_score(team2, team1, game_date)
-        return team1_score - team2_score
-    spread = property(get_spread)
-
-    def get_total(self, team1, team2, game):
-        team1_score = self.get_team_score(team1, team2, game_date)
-        team2_score = self.get_team_score(team2, team1, game_date)
-        return team1_score + team2_score
-    total = property(get_total)
-
-class Prediction(models.Model):
-    model = models.ForeignKey(PredictionModel)
-    game = models.ForeignKey(Game)
-    spread = models.FloatField(null=True, blank=True)
-    total = models.FloatField(null=True, blank=True)
-    money_line = models.IntegerField(null=True, blank=True)
-
-#########################################################################
-class ReturnToMean(PredictionModel):
-    """Assumes that both teams will score the average of their score
-       from the prior game and the amount allowed by the other team's
-       opponent in the prior game"""
-    def get_team_score(self, team1, team2, game_date):
-        team1_for = self.team1.get_prior_game(self.game_date).points_for
-        team2_against = self.team2.get_prior_game(self.game_date).points_against
-
-        return (team1_for + team2_against) / 2
-    team_score = property(get_team_score)
-
-###########################################################################
-class PointsPerPosession(PredictionModel):
-    """Assumes that both teams will keep the same points-per-posession
-    averages but that the number of posessions will be the average of the
-    number of posessions in the last game for each team"""
-    def get_team_score(self, team1, team2, game_date):
-        team1_prior_game = self.team1.get_prior_game(self.game_date)
-        team1_posessions = team1_prior_game.posessions
-        team1_ppp = team1_prior_game.offensive_points_per_posession
-
-        team2_prior_game = self.team2.get_prior_game(self.game_date)
-        team2_posessions = team2_prior_game.posessions
-
-        expected_posessions = (team1_posessions + team2_posessions) / 2
-        return team1_ppp * expected_posessions
-    team_score = property(get_team_score)
-
+    
 #########################################################################
 class BettingLine(models.Model):
     game = models.ForeignKey(Game)
@@ -86,7 +28,7 @@ class Proposition(models.Model):
             self.class_name == self.__class__.__name__
         super(Proposition,self).save(*args, **kwargs)
 
-    def pay(self, wager_amount):
+    def pay_win(self, wager_amount):
         if self.payoff > 0:
             return wager_amount + (wager_amount * (float(self.payoff) / 100))
 
@@ -107,7 +49,7 @@ class GameMoney(Proposition):
     """straight up"""
     class Meta:
         proxy = True
-
+        
     def pay(self, wager_amount):
         # if we don't have a score, don't return a multiplier
         if self.game.points_for is None or self.game.points_against is None:
@@ -199,18 +141,6 @@ class GameTotal(Proposition):
     ##class Meta:
         ##proxy = True
 ##########################################################################
-
-class Wager(models.Model):
-    proposition = models.ForeignKey(Proposition)
-    wager_amount = models.FloatField()
-    _payoff_amount = models.FloatField(null=True, blank=True,
-                                       db_column="payoff_amount")
-
-    def get_payoff_amount(self):
-        if self._payoff_amount is None:
-            self._payoff_amount = self.proposition.pay(self.wager_amount)
-        return self._payoff_amount
-    payoff_amount = property(get_payoff_amount)
 
 
 

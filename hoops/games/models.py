@@ -12,14 +12,20 @@ class School(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        """when saving a school, make sure we have the alias set up for it"""
+        """when saving a school, make sure we have the alias set up for it,
+        and teams for every known season as well"""
         super(School, self).save(*args, **kwargs)
 
         alias, created = SchoolAlias.objects.get_or_create(alias=self.name,
                                                  defaults={"school" : self})
         if not created:
             assert alias.school == self
-
+            
+        # TODO:  do this only when creating a new school
+        for season in Season.objects.all():
+            team = Team.objects.get_or_create(school=self, season=season)
+            
+            
 class SchoolAlias(models.Model):
     alias = models.CharField(max_length=100)
     school = models.ForeignKey(School)
@@ -34,6 +40,15 @@ class Season(models.Model):
 
     def __unicode__(self):
         return u"%s" % self.year
+    
+    def save(self, *args, **kwargs):
+        super(Season, self).save(*args, **kwargs)
+        
+        # make sure that we have a team for each school. 
+        # TODO:  only do when creating a new season
+        for school in School.objects.all():
+            team, created = Team.objects.get_or_create(school=school, 
+                                                       season=self)
 
 class Team(models.Model):
     """the intersection of a school and year.  Note that sometimes people
@@ -54,7 +69,10 @@ class Team(models.Model):
 
     def get_prior_game(self, game_date):
         try:
-            return self.ordered_games.filter(game_date__lt=game_date)[0]
+            season = Season.objects.get(start_date__lte=game_date,
+                                        end_date__gte=game_date)
+            return self.ordered_games.filter(game_date__lt=game_date,
+                                             season=season)[0]
         except IndexError:
             return None
 

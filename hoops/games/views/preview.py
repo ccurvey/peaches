@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django import forms
 
 from games.models import Team, School, Season
+from guess.models import ReturnToMean, ReturnToMeanNeutral, PointsPerPosession, Prediction
 
 class MatchupForm(forms.Form):
     game_date = forms.DateField(widget=forms.widgets.DateInput(
@@ -11,95 +12,8 @@ class MatchupForm(forms.Form):
     spread = forms.FloatField()
     total = forms.FloatField()
 
-# TODO:  move the prediction models out to their own app so that we can do
-# more stuff with them.
-class PredictionModel(object):
-    def __init__(self, team1, team2, game_date):
-        self.team1 = team1
-        self.team2 = team2
-        self.game_date = game_date
-
-    def get_name(self):
-        try:
-            return self.MODEL_NAME
-        except AttributeError:
-            return self.__class__.__name__
-    name = property(get_name)
-
-    def get_spread(self):
-        return self.team2_score - self.team1_score
-    spread = property(get_spread)
-
-    def get_total(self):
-        return self.team1_score + self.team2_score
-    total = property(get_total)
-
-class ReturnToMean(PredictionModel):
-    """Assumes that both teams will score the average of their score
-       from the prior game and the amount allowed by the other team's
-       opponent in the prior game"""
-    def get_team1_score(self):
-        team1_for = self.team1.get_prior_game(self.game_date).points_for
-        team2_against = self.team2.get_prior_game(self.game_date).points_against
-
-        return (team1_for + team2_against) / 2
-    team1_score = property(get_team1_score)
-
-    def get_team2_score(self):
-        team1_against = self.team1.get_prior_game(self.game_date).points_against
-        team2_for = self.team2.get_prior_game(self.game_date).points_for
-
-        return (team2_for + team1_against) / 2
-    team2_score = property(get_team2_score)
-
-class ReturnToMeanNeutral(PredictionModel):
-    def get_team1_score(self):
-        team1_for = self.team1.get_prior_away_game(self.game_date).points_for
-        team2_against = self.team2.get_prior_away_game(self.game_date).points_against
-
-        return (team1_for + team2_against) / 2
-    team1_score = property(get_team1_score)
-
-    def get_team2_score(self):
-        team1_against = self.team1.get_prior_away_game(self.game_date).points_against
-        team2_for = self.team2.get_prior_away_game(self.game_date).points_for
-
-        return (team2_for + team1_against) / 2
-    team2_score = property(get_team2_score)
-
-
-class PointsPerPosession(PredictionModel):
-    """Assumes that both teams will keep the same points-per-posession
-    averages but that the number of posessions will be the average of the
-    number of posessions in the last game for each team"""
-    def get_team1_score(self):
-        team1_prior_game = self.team1.get_prior_game(self.game_date)
-        team1_posessions = team1_prior_game.posessions
-        team1_ppp = team1_prior_game.offensive_points_per_posession
-
-        team2_prior_game = self.team2.get_prior_game(self.game_date)
-        team2_posessions = team2_prior_game.posessions
-        #team2_ppp = team2_prior_game.offensive_points_per_posession
-
-        expected_posessions = (team1_posessions + team2_posessions) / 2
-        return team1_ppp * expected_posessions
-    team1_score = property(get_team1_score)
-
-    def get_team2_score(self):
-        team1_prior_game = self.team1.get_prior_game(self.game_date)
-        team1_posessions = team1_prior_game.posessions
-        #team1_ppp = team1_prior_game.offensive_points_per_posession
-
-        team2_prior_game = self.team2.get_prior_game(self.game_date)
-        team2_posessions = team2_prior_game.posessions
-        team2_ppp = team2_prior_game.offensive_points_per_posession
-
-        expected_posessions = (team1_posessions + team2_posessions) / 2
-        return team2_ppp * expected_posessions
-    team2_score = property(get_team2_score)
-
 """This works if you have an existing line.  If you don't, use the one below"""
-class MarketPrediction(PredictionModel):
+class MarketPrediction(Prediction):
     def get_team1_score(self):
         from games.models import Game
         try:
@@ -147,9 +61,12 @@ class MarketPrediction(PredictionModel):
             return (total.value / 2) - (side.value / 2)
     team2_score = property(get_team2_score)
 
-class MarketPrediction(PredictionModel):
+class MarketPrediction(Prediction):
     def __init__(self, team1, team2, game_date, spread, total):
-        super(MarketPrediction, self).__init__(team1, team2, game_date)
+        super(MarketPrediction, self).__init__()
+        self._game_date = game_date
+        self._team1 = team1
+        self._team2 = team2
         self._spread = spread
         self._total = total
 

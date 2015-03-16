@@ -300,6 +300,7 @@ def process_file(filename):
             pg.add_line(Line(cells, year))
  
 def run():
+    import wingdbstub
     import glob
     for filename in glob.glob("/home/chris/Dropbox/odds/ncaabasketballoddsarchives_*.htm",
                      ):

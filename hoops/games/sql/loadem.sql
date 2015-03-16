@@ -638,6 +638,11 @@ insert into games_school(abbrev, "name")
 select distinct abbrev, team_name
 from raw_data;
 
+insert into games_schoolalias (school_id, "alias")
+select distinct abbrev, team_name
+from raw_data;
+
+
 insert into games_season("year", start_date, end_date) values (1997, '11/1/1996','4/30/1997');
 insert into games_season("year", start_date, end_date) values (1998, '11/1/1997','4/30/1998');
 insert into games_season("year", start_date, end_date) values (1999, '11/1/1998','4/30/1999');
@@ -668,7 +673,7 @@ from games_school
 /****************************************************************************************
 ** create our game records.  This takes a few minutes (but only a few)
 *****************************************************************************************/
-truncate table games_game;
+delete from games_game;
 
 insert into games_game
 ( assists

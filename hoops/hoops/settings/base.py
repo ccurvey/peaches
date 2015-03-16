@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'django_extensions',
     'games',
     'odds',
+    'guess',
 )
 
 MIDDLEWARE_CLASSES = (
