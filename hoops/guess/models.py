@@ -21,22 +21,22 @@ class Prediction(models.Model):
     spread = models.FloatField(null=True, blank=True)
     total = models.FloatField(null=True, blank=True)
     money_line = models.IntegerField(null=True, blank=True)
-    
+
     # these can be gotten either frmo the game, or they can be set
     # dynamically.
     _team = models.ForeignKey(Team, null=True, blank=True, db_column="team_id")
-    _opponent = models.ForeignKey(Team, null=True, blank=True, 
+    _opponent = models.ForeignKey(Team, null=True, blank=True,
                                   db_column="opponent_id", related_name="+")
     _game_date = models.DateField(null=True, blank=True, db_column="game_date")
 
     def get_spread(self):
-        return self.team_score - self.opponent_score
+        return self.opponent_score - self.team_score
     spread = property(get_spread)
 
     def get_total(self):
         return self.team_score + self.opponent_score
     total = property(get_total)
-    
+
     def get_team(self):
         if self._team is None:
             self._team = self.game.team
@@ -48,25 +48,25 @@ class Prediction(models.Model):
             self._opponent = self.game.opponent
         return self._opponent
     opponent = property(get_opponent)
-    
+
     def get_game_date(self):
         if self._game_date is None:
             self._game_date = self.game.game_date
         return self._game_date
     game_date = property(get_game_date)
-    
+
     def get_name(self):
         try:
             return self.MODEL_NAME
         except AttributeError:
             return self.__class__.__name__
     name = property(get_name)
-    
+
 #######################################################################
 class ReturnToMean(Prediction):
     class Meta:
         proxy = True
-        
+
     """Assumes that both teams will score the average of their score
        from the prior game and the amount allowed by the other team's
        opponent in the prior game"""
@@ -114,11 +114,11 @@ class ReturnToMeanNeutral(ReturnToMean):
 
         return (opponent_for + team_against) / 2
     opponent_score = property(get_opponent_score)
-    
+
 class PointsPerPosession(Prediction):
     class Meta:
         proxy = True
-        
+
     """Assumes that both teams will keep the same points-per-posession
     averages but that the number of posessions will be the average of the
     number of posessions in the last game for each team"""
@@ -152,17 +152,17 @@ class SideWager(models.Model):
     # -1 = loss, 0 = push , 1 = win
     _outcome = models.IntegerField(null=True, blank=True, db_column="outcome")
     predicted_value = models.FloatField()
-    
+
     def save(self, *args, **kwargs):
         if not self._outcome:
             self.get_outcome()
         super(SideWager, self).save(*args, **kwargs)
-    
+
     def get_outcome(self):
         if not self._outcome:
             game = self.proposition.game
             proposition = self.proposition
-            
+
             if game.points_for + proposition.value > game.points_against:
                 self._outcome = 1
             elif game.points_for + proposition.value == game.points_against:
@@ -171,7 +171,7 @@ class SideWager(models.Model):
                 self._outcome = -1
         return self._outcome
     outcome = property(get_outcome)
-        
+
 class TotalWager(models.Model):
     proposition = models.ForeignKey(Proposition)
     model_name = models.CharField(max_length=100)
@@ -185,11 +185,11 @@ class TotalWager(models.Model):
         if not self._outcome:
             self.get_outcome()
         super(TotalWager, self).save(*args, **kwargs)
-    
+
 class OverWager(TotalWager):
     class Meta:
         proxy = True
-        
+
     def save(self, *args, **kwargs):
         if self.over_under is None:
             self.over_under = 'O'
@@ -207,16 +207,16 @@ class OverWager(TotalWager):
                 self._outcome = -1
         return self._outcome
     outcome = property(get_outcome)
-    
+
 class UnderWager(TotalWager):
     class Meta:
         proxy = True
-        
+
     def save(self, *args, **kwargs):
         if self.over_under is None:
             self.over_under = 'U'
         super(OverWager, self).save(*args, **kwargs)
-    
+
     def get_outcome(self):
         if self._outcome is None:
             game = self.proposition.game
@@ -233,7 +233,6 @@ class UnderWager(TotalWager):
 class MoneyLineWager(SideWager):
     class Meta:
         proxy = True
-        
-        
-        
-        
+
+
+

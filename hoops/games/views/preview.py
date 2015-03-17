@@ -71,11 +71,11 @@ class MarketPrediction(Prediction):
         self._total = total
 
     def get_team_score(self):
-        return (self._total / 2) + (self._spread / 2)
+        return (self._total / 2) - (self._spread / 2)
     team_score = property(get_team_score)
 
     def get_opponent_score(self):
-        return (self._total / 2) - (self._spread / 2)
+        return (self._total / 2) + (self._spread / 2)
     opponent_score = property(get_opponent_score)
 
 # Create your views here.
