@@ -17,8 +17,7 @@
 {% block title %}Game Preview{% endblock title %}
 
 {% block content %}
-  <form method="POST">
-    {% csrf_token %}
+  <form method="GET">
     Game Date: {{ form.game_date }}
     Team: {{ form.school1 }}
     Opponent: {{ form.school2 }}

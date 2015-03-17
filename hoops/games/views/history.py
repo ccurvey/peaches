@@ -56,7 +56,7 @@ def build_comparison(team1, team2):
 
 def history(request):
     if request.REQUEST.has_key("school1"):
-        form = MatchupForm(request.POST)
+        form = MatchupForm(request.REQUEST)
         if form.is_valid():
             team1 = Team.objects.get(
                 school=form.cleaned_data['school1'],

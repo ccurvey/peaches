@@ -11,8 +11,7 @@
 {% endblock stylesheets %}
 
 {% block content %}
-  <form method="POST">
-    {% csrf_token %}
+  <form method="GET">
     {{ form }}
     <input type="submit">
   </form>

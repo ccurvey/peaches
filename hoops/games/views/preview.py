@@ -83,7 +83,7 @@ from history import build_comparison
 
 def preview(request):
     if request.REQUEST.has_key("school1"):
-        form = MatchupForm(request.POST)
+        form = MatchupForm(request.REQUEST)
 
         if form.is_valid():
             season = Season.objects.get(
