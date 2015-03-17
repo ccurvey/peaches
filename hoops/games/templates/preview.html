@@ -90,6 +90,9 @@
                 {% ifequal games.0.location "A" %}
                   @
                 {% endifequal %}
+                {% ifequal games.0.location "N" %}
+                  (N)
+                {% endifequal %}
                 {{games.0.opponent.school.name}}
               </td>
               <td>{{games.0.points_for}}</td>
@@ -116,7 +119,7 @@
               <td>{{games.1.points_against}}</td>
               <td>{{games.1.result}}</td>
               <td class="prop-value">{{games.1.side_proposition.value}}</td>
-              <td class="result">{{games.1.total_proposition.value}}</td>
+              <td class="result">{{games.1.side_proposition.result_text}}</td>
               <td class="prop-value">{{games.1.total_proposition.value}}</td>
               <td class="result">{{games.1.total_proposition.result_text}}</td>
             </tr>
