@@ -20,12 +20,12 @@ class School(models.Model):
                                                  defaults={"school" : self})
         if not created:
             assert alias.school == self
-            
+
         # TODO:  do this only when creating a new school
         for season in Season.objects.all():
             team = Team.objects.get_or_create(school=self, season=season)
-            
-            
+
+
 class SchoolAlias(models.Model):
     alias = models.CharField(max_length=100)
     school = models.ForeignKey(School)
@@ -40,14 +40,14 @@ class Season(models.Model):
 
     def __unicode__(self):
         return u"%s" % self.year
-    
+
     def save(self, *args, **kwargs):
         super(Season, self).save(*args, **kwargs)
-        
-        # make sure that we have a team for each school. 
+
+        # make sure that we have a team for each school.
         # TODO:  only do when creating a new season
         for school in School.objects.all():
-            team, created = Team.objects.get_or_create(school=school, 
+            team, created = Team.objects.get_or_create(school=school,
                                                        season=self)
 
 class Team(models.Model):
@@ -117,6 +117,10 @@ class Game(models.Model):
     posessions = models.IntegerField(null=True, blank=True)
     offensive_points_per_posession = models.FloatField(null=True, blank=True)
     defensive_points_per_posession = models.FloatField(null=True, blank=True) # not sure what this is
+
+    def __unicode__(self):
+        return "%s vs %s on %s" % (self.team.school.name,
+                                   self.opponent.school.name, self.game_date)
 
     def get_side_proposition(self):
         from odds.models import GameSide

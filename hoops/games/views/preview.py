@@ -7,8 +7,8 @@ from guess.models import ReturnToMean, ReturnToMeanNeutral, PointsPerPosession, 
 class MatchupForm(forms.Form):
     game_date = forms.DateField(widget=forms.widgets.DateInput(
         attrs={"class" : "datepicker"}))
-    school1 = forms.ModelChoiceField(queryset=School.objects.order_by("abbrev"))
-    school2 = forms.ModelChoiceField(queryset=School.objects.order_by("abbrev"))
+    school1 = forms.ModelChoiceField(queryset=School.objects.order_by("name"))
+    school2 = forms.ModelChoiceField(queryset=School.objects.order_by("name"))
     spread = forms.FloatField()
     total = forms.FloatField()
 
@@ -62,21 +62,21 @@ class MarketPrediction(Prediction):
     team2_score = property(get_team2_score)
 
 class MarketPrediction(Prediction):
-    def __init__(self, team1, team2, game_date, spread, total):
+    def __init__(self, team, opponent, game_date, spread, total):
         super(MarketPrediction, self).__init__()
         self._game_date = game_date
-        self._team1 = team1
-        self._team2 = team2
+        self._team = team
+        self._oppponent = opponent
         self._spread = spread
         self._total = total
 
-    def get_team1_score(self):
-        return (self._total / 2) - (self._spread / 2)
-    team1_score = property(get_team1_score)
-
-    def get_team2_score(self):
+    def get_team_score(self):
         return (self._total / 2) + (self._spread / 2)
-    team2_score = property(get_team2_score)
+    team_score = property(get_team_score)
+
+    def get_opponent_score(self):
+        return (self._total / 2) - (self._spread / 2)
+    opponent_score = property(get_opponent_score)
 
 # Create your views here.
 def preview(request):
@@ -97,13 +97,18 @@ def preview(request):
             market = MarketPrediction(team1, team2, game_date,
                                       form.cleaned_data['spread'],
                                       form.cleaned_data['total'])
-            rtm = ReturnToMean(team1, team2, game_date)
-            rtm_n = ReturnToMeanNeutral(team1, team2, game_date)
-            ppp = PointsPerPosession(team1, team2, game_date)
+            import wingdbstub
+            rtm = ReturnToMean(_team=team1, _opponent=team2,
+                               _game_date=game_date)
+            ## commented out until next season
+            ##rtm_n = ReturnToMeanNeutral(_team=team1, _opponent=team2,
+                                        ##_game_date=game_date)
+            ppp = PointsPerPosession(_team=team1, _opponent=team2,
+                                     _game_date=game_date)
 
             return render(request, "preview.html",
                           {"form" : form,  "team1" : team1, "team2" : team2,
-                           "models" : (market, rtm, rtm_n, ppp)})
+                           "models" : (market, rtm, ppp)})
     else:
         form = MatchupForm()
 

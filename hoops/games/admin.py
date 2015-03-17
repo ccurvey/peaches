@@ -1,5 +1,5 @@
 from django.contrib import admin
-from games.models import School, SchoolAlias, Team, Game
+from games.models import School, SchoolAlias, Team, Game, Season
 # Register your models here.
 
 class SchoolAliasInline(admin.TabularInline):
@@ -12,6 +12,9 @@ class SchoolAdmin(admin.ModelAdmin):
     inlines = [SchoolAliasInline,]
 admin.site.register(School, SchoolAdmin)
 
+class GameAdmin(admin.ModelAdmin):
+    date_hierarchy = 'game_date'
+admin.site.register(Game, GameAdmin)
 
 admin.site.register(Team)
-admin.site.register(Game)
+admin.site.register(Season)

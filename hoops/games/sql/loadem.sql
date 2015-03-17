@@ -528,9 +528,149 @@ copy raw_data
 , defensive_points_per_posession 
 ) from '/tmp/Team Performances - 2013.csv' with (format csv, header);
 
-/*************************************************************
---2014 added new fields, so we will skip that for now.
-copy raw_data 
+/*******************************************
+** 2014+ adds new data
+********************************************/
+drop table if exists new_raw_data;
+
+create unlogged table new_raw_data
+( id serial
+, rank integer
+, team_name varchar(100)
+, team_id integer
+, abbrev varchar(10)
+, game_date date
+, opponent_name varchar(100)
+, opponent_id integer
+, "location" varchar(1)
+, straight_up_result varchar(1)
+, points_for integer
+, points_against integer
+, field_goals_attempted integer
+, field_goals_made integer
+, field_goal_pct float
+, free_throws_attempted integer
+, free_throws_made integer
+, free_throw_pct float
+, three_pointers_attempted integer
+, three_pointers_made integer
+, three_point_pct float
+, effective_field_goal_pct float
+, ppws float
+, turnover_ratio float
+, blocks integer
+, fouls integer
+, offensive_rebounds integer
+, total_rebounds integer
+, steals integer
+, assists integer
+, opponent_field_goals_made integer
+, opponent_field_goals_attempted integer
+, opponent_field_goal_pct float
+, opponent_free_throws_made integer
+, opponent_free_throws_attempted integer
+, opponent_free_throw_pct float
+, opponent_three_pointers_made integer
+, opponent_three_pointers_attempted integer
+, opponent_three_point_pct float
+, posessions integer
+, offensive_points_per_posession float
+, defensive_points_per_posession float
+);
+
+copy new_raw_data
+( rank 
+, team_name
+, team_id 
+, abbrev 
+, game_date 
+, opponent_name 
+, opponent_id 
+, "location" 
+, straight_up_result 
+, points_for 
+, points_against 
+, field_goals_attempted 
+, field_goals_made 
+, field_goal_pct 
+, free_throws_attempted 
+, free_throws_made 
+, free_throw_pct 
+, three_pointers_attempted 
+, three_pointers_made 
+, three_point_pct 
+, effective_field_goal_pct 
+, ppws 
+, turnover_ratio 
+, blocks 
+, fouls 
+, offensive_rebounds 
+, total_rebounds 
+, steals 
+, assists 
+, opponent_field_goals_made 
+, opponent_field_goals_attempted 
+, opponent_field_goal_pct 
+, opponent_free_throws_made 
+, opponent_free_throws_attempted 
+, opponent_free_throw_pct 
+, opponent_three_pointers_made 
+, opponent_three_pointers_attempted 
+, opponent_three_point_pct 
+, posessions 
+, offensive_points_per_posession 
+, defensive_points_per_posession 
+) from '/tmp/Team Performances - 2014.csv' with (format csv, header);
+
+copy new_raw_data
+( rank 
+, team_name
+, team_id 
+, abbrev 
+, game_date 
+, opponent_name 
+, opponent_id 
+, "location" 
+, straight_up_result 
+, points_for 
+, points_against 
+, field_goals_attempted 
+, field_goals_made 
+, field_goal_pct 
+, free_throws_attempted 
+, free_throws_made 
+, free_throw_pct 
+, three_pointers_attempted 
+, three_pointers_made 
+, three_point_pct 
+, effective_field_goal_pct 
+, ppws 
+, turnover_ratio 
+, blocks 
+, fouls 
+, offensive_rebounds 
+, total_rebounds 
+, steals 
+, assists 
+, opponent_field_goals_made 
+, opponent_field_goals_attempted 
+, opponent_field_goal_pct 
+, opponent_free_throws_made 
+, opponent_free_throws_attempted 
+, opponent_free_throw_pct 
+, opponent_three_pointers_made 
+, opponent_three_pointers_attempted 
+, opponent_three_point_pct 
+, posessions 
+, offensive_points_per_posession 
+, defensive_points_per_posession 
+)from '/tmp/Team Performances - 2015.csv' with (format csv, header);
+
+
+/******************************************************
+** copy the 2014 and 2015 data into the old table
+******************************************************/
+insert into raw_data
 ( rank 
 , team_name 
 , team_id 
@@ -556,9 +696,35 @@ copy raw_data
 , assists 
 , posessions 
 , offensive_points_per_posession 
-, defensive_points_per_posession 
-) from '/tmp/Team Performances - 2014.csv' with (format csv, header);
-*************************************************************/
+, defensive_points_per_posession
+) select
+rank 
+, team_name 
+, team_id 
+, abbrev 
+, game_date 
+, opponent_name 
+, opponent_id 
+, "location"
+, straight_up_result 
+, points_for 
+, points_against 
+, field_goal_pct 
+, free_throw_pct 
+, three_point_pct 
+, effective_field_goal_pct 
+, ppws 
+, turnover_ratio 
+, blocks 
+, fouls 
+, offensive_rebounds 
+, total_rebounds 
+, steals 
+, assists 
+, posessions 
+, offensive_points_per_posession 
+, defensive_points_per_posession
+from new_raw_data;
 
 /********************************************************
 ** make some fixups to the data
@@ -572,15 +738,6 @@ and team_name = 'Cleveland';
 update raw_data
 set opponent_name = 'Cleveland State'
 where opponent_name = 'Cleveland';
-
-update raw_data
-set team_name = 'Florida International'
-where abbrev = 'FAU'
-and team_name = 'Florida Atlantic';
-
-update raw_data
-set opponent_name = 'Florida International'
-where opponent_name = 'Florida Atlantic';
 
 update raw_data
 set team_name = 'La Salle'
@@ -729,5 +886,6 @@ join games_team ot on os.abbrev = ot.school_id
                   and s.year = ot.season_id
 join games_team t on r.abbrev = t.school_id
                  and s.year = t.season_id;
+-- where r.game_date > '11/1/2013'; -- for adding the 2014 and 2015 seasons
 
 

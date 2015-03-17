@@ -19,7 +19,12 @@
 {% block content %}
   <form method="POST">
     {% csrf_token %}
-    {{ form }}
+    Game Date: {{ form.game_date }}
+    Team: {{ form.school1 }}
+    Opponent: {{ form.school2 }}
+    <br>
+    Team Spread: {{ form.spread }}
+    Total: {{ form.total }}
     <input type="submit">
   </form>
 
@@ -37,8 +42,8 @@
         {% for model in models %}
           <tr>
             <td>{{model.name}}</td>
-            <td>{{model.team1_score}}</td>
-            <td>{{model.team2_score}}</td>
+            <td>{{model.team_score}}</td>
+            <td>{{model.opponent_score}}</td>
             <td>{{model.spread}}</td>
             <td>{{model.total}}</td>
           </tr>
