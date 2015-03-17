@@ -79,6 +79,8 @@ class MarketPrediction(Prediction):
     opponent_score = property(get_opponent_score)
 
 # Create your views here.
+from history import build_comparison
+
 def preview(request):
     if request.REQUEST.has_key("school1"):
         form = MatchupForm(request.POST)
@@ -97,7 +99,7 @@ def preview(request):
             market = MarketPrediction(team1, team2, game_date,
                                       form.cleaned_data['spread'],
                                       form.cleaned_data['total'])
-            import wingdbstub
+
             rtm = ReturnToMean(_team=team1, _opponent=team2,
                                _game_date=game_date)
             ## commented out until next season
@@ -106,9 +108,13 @@ def preview(request):
             ppp = PointsPerPosession(_team=team1, _opponent=team2,
                                      _game_date=game_date)
 
+            comparison_grid, common_opponents = build_comparison(team1, team2)
+
             return render(request, "preview.html",
                           {"form" : form,  "team1" : team1, "team2" : team2,
-                           "models" : (market, rtm, ppp)})
+                           "models" : (market, rtm, ppp),
+                           "comparison_grid" : comparison_grid,
+                           "common_opponents" : common_opponents})
     else:
         form = MatchupForm()
 

@@ -52,4 +52,80 @@
     </table>
   {% endif %}
 
+  <hr />
+  {% if comparison_grid %}
+    <div class="row">
+      <!-- TODO:  don't use bootstrap classes, write your own -->
+      <table border="1">
+        <thead>
+          <td colspan="8">{{team1.school.name}}</td>
+          <td>&nbsp;</td>
+          <td colspan="8">{{team2.school.name}}</td>
+        </thead>
+        <thead>
+          <th>Opponent</th>
+          <th>PF</th>
+          <th>PA</th>
+          <th>SU</th>
+          <th>Spread</th>
+          <th>SR</th>
+          <th>Total</th>
+          <th>TR</th>
+
+          <th>Date</th>
+
+          <th>Opponent</th>
+          <th>PF</th>
+          <th>PA</th>
+          <th>SU</th>
+          <th>Spread</th>
+          <th>SR</th>
+          <th>Total</th>
+          <th>TR</th>
+        </thead>
+
+        <tbody>
+          {% for game_date, games in comparison_grid %}
+            <tr {% if games.0.opponent in common_opponents or games.1.opponent in common_opponents %}style="font-weight:bold;"{% endif %} {% ifequal games.0.opponent team2 %}style="font-style:italic;"{% endifequal %}>
+              <td>
+                {% ifequal games.0.location "A" %}
+                  @
+                {% endifequal %}
+                {{games.0.opponent.school.name}}
+              </td>
+              <td>{{games.0.points_for}}</td>
+              <td>{{games.0.points_against}}</td>
+              <td>{{games.0.result}}</td>
+              <td class="prop-value">{{games.0.side_proposition.value}}</td>
+              <td class="result">{{games.0.side_proposition.result_text}}</td>
+              <td class="prop-value">{{games.0.total_proposition.value}}</td>
+              <td class="result">{{games.0.total_proposition.result_text}}</td>
+
+              <td bgcolor="lightgrey">{{game_date|date:"M d"}}</td>
+
+              <td>
+                {% ifequal games.1.location "A" %}
+                  @
+                {% endifequal %}
+
+                {% ifequal games.1.location "N" %}
+                  (N)
+                {% endifequal %}
+
+                {{games.1.opponent.school.name}}</td>
+              <td>{{games.1.points_for}}</td>
+              <td>{{games.1.points_against}}</td>
+              <td>{{games.1.result}}</td>
+              <td class="prop-value">{{games.1.side_proposition.value}}</td>
+              <td class="result">{{games.1.total_proposition.value}}</td>
+              <td class="prop-value">{{games.1.total_proposition.value}}</td>
+              <td class="result">{{games.1.total_proposition.result_text}}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+
 {% endblock content %}

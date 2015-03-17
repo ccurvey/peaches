@@ -37,6 +37,23 @@ class ComparisonGrid(object):
         except IndexError:
             raise StopIteration()
 
+def build_comparison(team1, team2):
+    comparison_grid = ComparisonGrid(team1, team2)
+
+    team1_opponents = set()
+    for game in team1.ordered_games:
+        team1_opponents.add(game.opponent)
+        comparison_grid.add_team1_game(game)
+
+    team2_opponents = set()
+    for game in team2.ordered_games:
+        team2_opponents.add(game.opponent)
+        comparison_grid.add_team2_game(game)
+
+    common_opponents = team1_opponents.intersection(team2_opponents)
+
+    return comparison_grid, common_opponents
+
 def history(request):
     if request.REQUEST.has_key("school1"):
         form = MatchupForm(request.POST)
@@ -48,19 +65,7 @@ def history(request):
                 school=form.cleaned_data['school2'],
                 season=form.cleaned_data['season'])
 
-            comparison_grid = ComparisonGrid(team1, team2)
-
-            team1_opponents = set()
-            for game in team1.ordered_games:
-                team1_opponents.add(game.opponent)
-                comparison_grid.add_team1_game(game)
-
-            team2_opponents = set()
-            for game in team2.ordered_games:
-                team2_opponents.add(game.opponent)
-                comparison_grid.add_team2_game(game)
-
-            common_opponents = team1_opponents.intersection(team2_opponents)
+            comparison_grid, common_opponents = build_comparison(team1, team2)
 
             return render(request, "history.html",
                           {"form" : form,  "team1" : team1, "team2" : team2,
