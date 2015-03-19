@@ -395,9 +395,9 @@ def process_excel_files(filename, year):
 def run():
     import wingdbstub
     import glob
-    for filename in glob.glob("/home/chris/Dropbox/odds/ncaabasketballoddsarchives_*.htm",
-                     ):
-        process_file(filename)
+    #for filename in glob.glob("/home/chris/Dropbox/odds/ncaabasketballoddsarchives_*.htm",
+                     #):
+        #process_file(filename)
 
     process_excel_files("/home/chris/Dropbox/odds/Master Scores 2014-15a.xlsx",
                         2015)

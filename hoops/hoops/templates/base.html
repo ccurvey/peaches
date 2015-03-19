@@ -46,11 +46,20 @@
                         <li class="active"><a href="#">Home</a></li>
                         <li><a href="{% url "games.views.history" %}">History</a></li>
                         <li><a href="{% url "games.views.preview" %}">Preview</a></li>
+                        <li><a href="{% url "games.views.add_game" %}">Add Game</a></li>
                     </ul>
                 </div><!--/.nav-collapse -->
             </div>
         </nav>
 
+        {% if messages %}
+            <ul>
+              {% for message in messages %}
+                <li>{{message}}</li>
+              {% endfor %}
+            </ul>
+        {% endif %}
+        
         <div class="container">
             {% block content %}
             {% endblock content %}
